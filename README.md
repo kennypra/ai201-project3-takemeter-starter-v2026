@@ -42,6 +42,9 @@
 <!-- Your community, and what your classifier sorts posts into. Three or four
      sentences. -->
 
+TakeMeter sorts posts from r/culinary, a public subreddit where home cooks and culinary students share food, by what the poster wants from the community. `showcase` posts present a finished dish without asking for anything,
+`rate_request` posts ask for a rating or critique of a dish, and `question` posts ask for information or advice. The classifier reads each post's title and body text, since most posts on the subreddit are photos. A tool like this
+could send critique requests to people who like giving feedback and questions to people who like answering them.
 
 
 ---
@@ -171,15 +174,13 @@ instead of the label.
 **Settings:** <!-- epochs, learning rate, batch size, seed -->
 3 epochs, learning rate 2e-5, batch size 16, max length 128 tokens, seed 42.
 
-**Device:** `mps` (Apple Silicon GPU), torch 2.14.1. Training took about
-20 seconds.
+**Device:** `mps` (Apple Silicon GPU), torch 2.14.1. Training took about 20 seconds.
 
 **Anything I changed from the defaults, and why:** Nothing. I used the
 notebook's default settings.
 
 **Split sizes:** <!-- train / val / test, and per-label counts in the test
-split. If a label had fewer than about 8 in test, say so — it explains a lot
-of next unit's variance. -->
+split. If a label had fewer than about 8 in test, say so — it explains a lot of next unit's variance. -->
 Stratified 70/15/15 split of 150 posts: 104 train, 23 validation, 23 test.
 
 | Label | Train | Val | Test |
@@ -188,10 +189,7 @@ Stratified 70/15/15 split of 150 posts: 104 train, 23 validation, 23 test.
 | `question` | 33 | 7 | 7 |
 | `rate_request` | 12 | 3 | 3 |
 
-Two labels have fewer than 8 posts in the test split: `question` (7) and
-`rate_request` (3). Their F1 scores rest on very few posts and will move a lot
-between seeds. `rate_request` is the bigger concern: a single post changes its
-score by roughly a third.
+Two labels have fewer than 8 posts in the test split: `question` (7) and `rate_request` (3). Their F1 scores rest on very few posts and will move a lot between seeds. `rate_request` is the bigger concern: a single post changes its score by roughly a third.
 
 
 ---
@@ -205,19 +203,21 @@ score by roughly a third.
      workflow and disclosing it costs you nothing. Not disclosing it is the
      problem. -->
 
-**Moment 1**
+**Moment 1: refining the label definitions**
 
-- *What I asked for:*
-- *What came back:*
-- *What I changed:*
+- *What I asked for:* I asked Claude to write one-sentence definitions for my three labels, based on the 41 posts I had collected and labelled myself.
+- *What came back:* Definitions where `rate_request` required an explicit ask ("rate my", "critique") and `question` covered anything other than a verdict on the poster's dish. The line between the two depended on how the post was phrased.
+- *What I changed:* That line didn't fit my data, because many rating requests are phrased as questions ("How does my chicken look"). I redefined `question` as general questions and requests for information, and `rate_request` as asking for feedback on a finished dish, whether phrased as a request or a question. Claude raised two edge cases, and I decided both: troubleshooting a dish still in progress (a marinade, a stock) is `question`, and showing a dish but asking for other people's recipes is also `question`.
 
-**Moment 2**
+**Moment 2: checking the CSV for broken quotation marks**
 
-- *What I asked for:*
-- *What came back:*
-- *What I changed:*
+- *What I asked for:* Pasted posts can contain quotation marks that break CSV rows, so I asked Claude to check `labels.csv` for any rows that didn't split into exactly three columns.
+- *What came back:* It said every row was fine. But I spotted a post with "Bali belly" in quotation marks that it hadn't mentioned by name, and I asked it to catch everything.
+- *What I changed:* I had it scan every row for every kind of quote character. Those quotes turned out to be curly quotes, which are safe in a CSV, and a later batch did have a row missing its columns, which it fixed. From then on I had it run the full check after every batch I added, and I kept all post text unedited.
 
-**Pre-labelling disclosure:**
+**Pre-labelling disclosure:** Claude pre-labelled 109 of my 150 posts from my written definitions. Each of those rows has `pre-labeled` in the `note` column. Claude flagged 16 of them as unsure. I read every pre-labelled row and
+corrected the labels I disagreed with, starting with the flagged ones. The 20 `cold` rows and 21 other rows (blank note) I labelled myself without AI.
+
 
 <!-- ═══════════════════════ UNIT 6 — THE TEST ═══════════════════════
 
