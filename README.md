@@ -101,19 +101,38 @@
 <!-- Where you collected from, how you labelled, your counts, and three hard
      cases. -->
 
-**Where the posts came from:**
+**Where the posts came from:** r/culinary, a public subreddit. Most posts there
+are photos, so each row is the post's title plus any body text, copied in whole
+and unedited.
 
 **How I labelled them:** <!-- Cold first? Pre-labelled with AI and corrected?
 Say so plainly — the disclosure is required, not penalised. -->
+- **20 rows (`cold`):** I labelled these myself from my definitions, with no AI help.
+- **21 rows (blank note):** I also labelled these myself, without AI.
+- **109 rows (`pre-labeled`):** Claude (an AI assistant) pre-labelled these from my written definitions and flagged the ones it was unsure about. I read every one and corrected the labels I disagreed with, starting with the flagged rows.
+
+Partway through, I tightened the line between `question` and `rate_request`. Feedback on a finished dish is `rate_request`. A general question, or a question about a dish still in progress, is `question`. I then re-checked the existing labels against the new wording.
 
 **Counts per label:**
 
 | Label | Count | Share |
 |---|---|---|
-|  |  |  |
-|  |  |  |
-|  |  |  |
-| **Total** |  | 100% |
+| `showcase` | 85 | 57% |
+| `question` | 47 | 31% |
+| `rate_request` | 18 | 12% |
+| **Total** | **150** | 100% |
+
+**Why 150 and not 200:** I ran out of time to collect the last 50 posts, so I
+stopped at the brief's floor of 150. The cost falls mostly on `rate_request`.
+With only 18 examples, it will have about 3 posts in the test split, so its F1
+will swing a lot between seeds. It also misses my own balance target (criterion
+4: every label at least 20%). The next 50 posts would have gone almost entirely
+to `rate_request`.
+
+One more thing about the data: about 25 of the `showcase` posts seem to come
+from a single prolific poster with a very consistent style ("Wok-Tossed…",
+"I had some ___ in the fridge…"). The model may partly learn that writing style
+instead of the label.
 
 **Three hard cases**
 
