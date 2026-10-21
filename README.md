@@ -54,33 +54,43 @@
      The decision rule is worth a point on its own and it's the thing most
      people leave out. Every taxonomy has a hardest boundary. Name yours. -->
 
-### `label_one`
+### `showcase`
 
-**Definition:**
-
-**Example 1:**
->
-
-**Example 2:**
->
-
-### `label_two`
-
-**Definition:**
+**Definition:** The poster presents a dish they made, with or without a description of how they made it, and does not ask anyone to judge it or ask the community a question.
 
 **Example 1:**
->
+> Kunafa Prawns. Garlic and paprika marinated Kunafa wraped deep fried prawns served on top of creamy lebneh finished with chilli oil and spiced nuts.
 
 **Example 2:**
->
+> Look what I made today with just 1 chicken wing ,no oil I turned it into a feast
+
+### `rate_request`
+
+**Definition:** The poster shares a dish they made and explicitly asks others to rate, judge, or critique it ("rate my", "smash or pass", "critique", "what can I improve").
+
+**Example 1:**
+> Crepe Concept Critique Wanted (pls)
+
+**Example 2:**
+> Tilapia on top of white rice with creamy lime sauce, and broccolini. Tell me what I can improve. Still trying to learn how to plate. Looking back, adding the sauce on top of the tilapia wasn’t the smartest idea. The overall dish did taste great.
+
+### `question`
+
+**Definition:** The poster asks the community for information, advice, ideas, or opinions about anything other than a verdict on a dish they made.
+
+**Example 1:**
+> How do I make vanilla cakes that stay moist even after 2–3 days in the fridge?
+
+**Example 2:**
+> What is wrong with my garlic? I peeled the garlic and one clove is golden and translucent. Is it safe to eat?
 
 ### The hardest boundary
 
-**Which two labels:**
+**Which two labels:** `showcase` and `rate_request`
 
-**The decision rule I used every time:**
-<!-- e.g. "If the post names a specific checkable fact, it's `analysis`, even
-     if the tone is heated." -->
+**The decision rule I used every time:** If the post explicitly asks for a rating, judgment critique, or ways to improve the dish, it's `rate_request`. Otherwise it's `showcase`, even if the poster criticizes their own dish ("the meat buns were lowk raw too") or describes it in detail.
+
+**A second rule, for `rate_request` vs `question`:** If the request is about the poster's own finished dish ("tell me what I can improve"), it's `rate_request`. If it's about anything else (a technique, an ingredient, what to make), it's `question`, even if a photo of their food is attached.
 
 
 
