@@ -166,16 +166,32 @@ instead of the label.
 
 <!-- Your starting model, your settings, and anything you changed and why. -->
 
-**Base model:**
+**Base model:** `distilbert-base-uncased`
 
 **Settings:** <!-- epochs, learning rate, batch size, seed -->
+3 epochs, learning rate 2e-5, batch size 16, max length 128 tokens, seed 42.
 
-**Anything I changed from the defaults, and why:**
+**Device:** `mps` (Apple Silicon GPU), torch 2.14.1. Training took about
+20 seconds.
+
+**Anything I changed from the defaults, and why:** Nothing. I used the
+notebook's default settings.
 
 **Split sizes:** <!-- train / val / test, and per-label counts in the test
 split. If a label had fewer than about 8 in test, say so — it explains a lot
 of next unit's variance. -->
+Stratified 70/15/15 split of 150 posts: 104 train, 23 validation, 23 test.
 
+| Label | Train | Val | Test |
+|---|---|---|---|
+| `showcase` | 59 | 13 | 13 |
+| `question` | 33 | 7 | 7 |
+| `rate_request` | 12 | 3 | 3 |
+
+Two labels have fewer than 8 posts in the test split: `question` (7) and
+`rate_request` (3). Their F1 scores rest on very few posts and will move a lot
+between seeds. `rate_request` is the bigger concern: a single post changes its
+score by roughly a third.
 
 
 ---
