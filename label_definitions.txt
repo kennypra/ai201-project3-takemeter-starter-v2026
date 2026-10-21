@@ -4,5 +4,5 @@
 # definitions you wrote. baseline.py reads this file.
 
 showcase: the poster presents a dish they made, with or without a description of how they made it, and does not ask anyone to judge it or ask the community a question
-rate_request: the poster shares a dish they made and explicitly asks others to rate, judge, or critique it ("rate my", "smash or pass", "critique", "what can I improve")
-question: the poster asks the community for information, advice, ideas, or opinions about anything other than a verdict on a dish they made
+rate_request: the poster shows a finished dish they made and asks for feedback on it (a rating, a critique, or advice on how to improve or plate it), whether as a request ("rate my", "smash or pass") or as a question ("how does this look?", "what would you change?")
+question: the poster asks a general question or asks for information (about techniques, ingredients, equipment, food safety, careers, recipes, or a dish still in progress) rather than for feedback on a finished dish they are showing

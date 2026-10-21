@@ -51,63 +51,48 @@ whether you hit them:
 
 ---
 
-## 1.
+## 1. Overall accuracy of at least 0.75 on the held-out test set
 
-<!-- Your criterion. It must name a number. -->
+On every one of the three seeds, the trained model labels at least 75% of the test posts correctly.
 
-
-
-**Why this target:**
-
-
+**Why this target:** `showcase` is 57% of my data, so a model that answered `showcase` every time would already score about 0.57, and chance with three labels is 0.33. 0.75 means getting roughly 4 out of 5 right, well above
+just guessing the biggest label. My labels depend on whether the post asks for something, which usually shows in the wording ("rate my", "how do I", "?"), so I'd expect a fine-tuned model to pick that up. I didn't go higher because my test split is only about 23–30 posts, so each mistake costs 3–4 points.
 
 ---
 
-## 2.
+## 2. `showcase` and `question` each have an F1 of at least 0.75
 
-<!-- Your criterion. -->
+On every seed, the F1 for `showcase` is at least 0.75 and the F1 for `question` is at least 0.75.
 
-
-
-**Why this target:**
-
-
+**Why this target:** These are my two big labels (85 and 48 posts), so each gets roughly 7–13 posts in the test split. That's enough for the score to mean something. They also have the clearest cues: `question` posts almost always
+contain a question mark or "how do I / any advice", and `showcase` posts are a dish name with no request. If the model can't separate these two, it hasn't learned my taxonomy at all.
 
 ---
 
-## 3.
+## 3. `rate_request` has an F1 of at least 0.40
 
-<!-- Your criterion. -->
+On every seed, the F1 for `rate_request` is at least 0.40.
 
-
-
-**Why this target:**
-
-
+**Why this target:** `rate_request` is my smallest label (17 posts when I wrote this, about 11%), which leaves only about 3 in the test split. One post right or wrong swings its F1 by more than 0.20, so a strict target here would mostly measure luck. 0.40 is looser than for my other labels on purpose. It still rules out a model that never predicts `rate_request`, which would score 0. It's also my hardest label, because it sits on my hardest boundary:
+a `showcase` post with self-criticism looks a lot like a `rate_request` without the explicit ask.
 
 ---
 
-## 4.
+## 4. Every label is at least 20% of `labels.csv`, and none is above 60%
 
-<!-- Your criterion. -->
+In the final `labels.csv` I train on, each of `showcase`, `question` and `rate_request` makes up between 20% and 60% of the rows.
 
-
-
-**Why this target:**
-
-
+**Why this target:** The brief caps any label at 70%, but my data at 150 rows is already 57% `showcase` and only 11% `rate_request`. That imbalance is the most likely reason for criterion 3 to fail. 20% of 200 rows is 40 posts, which
+puts about 6 `rate_request` posts in the test split instead of 3. 60% keeps `showcase` from growing any further while I collect the last posts.
 
 ---
 
-## 5.
+## 5. The most-confident third is at least 0.20 more accurate than the least-confident third
 
-<!-- Your criterion. -->
+On every seed, the accuracy on the model's most-confident third of test predictions is at least 0.20 higher than on its least-confident third (from the notebook's confidence report).
 
-
-
-**Why this target:**
-
-
+**Why this target:** Many of my posts are clear-cut: "Rate my dish" or a dish name with a recipe. A smaller set is borderline, like "Am I cooked chat?" or self-critique followed by "open to tips". If the model has learned my labels, it should be sure about the clear-cut posts and unsure about the borderline ones, and its accuracy should reflect that. With about 8 posts per third, 0.20 is
+roughly 2 posts, the smallest gap I'd trust as more than noise.
 
 ---
 
