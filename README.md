@@ -369,6 +369,56 @@ direction, toward `showcase`.
      have that can tell a LABELLING problem from a MODEL problem, and this
      section is graded on whether you used it that way. -->
 
+**Criteria 1, 2 and 3 (accuracy, `showcase`/`question` F1, `rate_request` F1):
+one cause.** The model never learned to use the text. It predicts my majority
+label, `showcase`, for every post. Out of the four common causes, this is
+mainly **a task the model can't reach from this much data, with these
+settings**, plus **too few examples** for `rate_request`. The evidence:
+
+- **The confusion matrix.** All 23 test posts land in the `showcase` column,
+  identically on all three seeds. Accuracy is exactly 13/23 = 0.565, the score
+  of always guessing the biggest label.
+- **The training log.** With 104 training posts and batch size 16, three
+  epochs is only about 21 training steps. Validation accuracy sat at 0.565
+  after every epoch (seed 42: 0.565, 0.565, 0.565), and training loss only
+  fell from about 1.03 to 0.88. The model stopped before it got past the
+  majority guess.
+- **The baseline.** The zero-shot model, given nothing but text, reaches F1
+  0.833 on `question`. The signal for my labels is in the posts. My
+  fine-tuned model just didn't train long enough on enough data to pick it up.
+- **`rate_request` specifically.** It has 18 examples, only 12 of them in each
+  training split. Even a model that trained properly would struggle to learn a
+  label from 12 posts, and its 3 test posts make the F1 swing by about a
+  third per post.
+
+**Why this is a model and data problem, not a labelling problem.** My
+agreement report shows I do make labelling errors. On the staff set I agreed
+77% of the time, and all 7 disagreements were pile (a): I applied a written
+rule loosely, always in the same direction (letting first-person phrasing push
+`analysis` posts into `reaction`). If the same kind of slip had damaged my own
+labels, it would show up in the matrix as confusion on one specific pair,
+`showcase` vs. `rate_request` or `rate_request` vs. `question`, and some
+correct predictions on the others. That's not what the matrix shows. It shows
+the model ignoring the text and predicting one label for everything. Messy
+labels on one boundary can't cause that. A model that never got enough
+training can. My labelling slips are real, and they're the next thing I'd
+check once the model actually trains, but they don't explain these misses.
+
+**Criterion 4 (label balance): cause is data collection.** `rate_request` is
+18 of 150 rows (12%), under my 20% floor. This is the **too few examples**
+cause, and it's a collection problem, not a model one. I ran out of time at
+150 posts, and `rate_request` posts are much rarer on r/culinary than
+`showcase` posts. It also feeds into criterion 3: the thinnest label in the
+data is the one with no correct predictions.
+
+**Criterion 5 (MET).** No diagnosis needed for a pass. But as noted in the
+verdict, it passes for the wrong reason. Once the model predicts more than one
+label, this gap will be a real test.
+
+**Revisions:** None. All five criteria produced a clear verdict from the
+outputs, so none of them was unmeasurable. The misses stay as they are in
+`criteria.md`.
+
 
 
 ---
