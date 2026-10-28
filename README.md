@@ -231,21 +231,55 @@ corrected the labels I disagreed with, starting with the flagged ones. The 20 `c
 <!-- Both models on the same posts. `python baseline.py --trained results.json`
      prints this table for you. -->
 
+Both models were scored on the same 23 held-out posts (`test_split.csv`, seed
+42). The baseline is `facebook/bart-large-mnli` zero-shot, prompted with my
+definitions from `label_definitions.txt`, run on `mps`. The trained model is
+the Unit 5 run in `results.json`.
+
 | Measure | Baseline | Trained | Difference |
 |---|---|---|---|
-| Overall accuracy |  |  |  |
-| Macro F1 |  |  |  |
-| F1 — `label_one` |  |  |  |
-| F1 — `label_two` |  |  |  |
+| Overall accuracy | 0.348 | 0.565 | +0.217 |
+| Macro F1 | 0.373 | 0.241 | -0.132 |
+| F1 — `question` | 0.833 | 0.000 | -0.833 |
+| F1 — `rate_request` | 0.286 | 0.000 | -0.286 |
+| F1 — `showcase` | 0.000 | 0.722 | +0.722 |
+
+**With and without my definitions:** I also ran the baseline on the bare label
+names, with no definitions (`baseline_results_no_definitions.json`).
+
+| Measure | Baseline, my definitions | Baseline, bare label names |
+|---|---|---|
+| Overall accuracy | 0.348 | 0.783 |
+| Macro F1 | 0.373 | 0.669 |
+| F1 — `question` | 0.833 | 0.833 |
+| F1 — `rate_request` | 0.286 | 0.286 |
+| F1 — `showcase` | 0.000 | 0.889 |
+
 
 **What I predicted before I looked:**
 <!-- Milestone 1 asks you to write this BEFORE seeing the trained numbers. A
      prediction made afterwards isn't one. -->
+I didn't write a prediction before looking. By the time I ran the baseline, I already saw in Unit 5 that my trained model predicts `showcase` for every
+post, and I saw the baseline's numbers before writing this section. Anything I
+wrote here now would be hindsight, so I'm not presenting one.
 
 **What the gap actually means:**
 <!-- If the baseline matched your trained model, your fine-tuning added
      nothing — and that is a real finding, not a failure. Say it plainly. -->
+My fine-tuning added nothing. The trained model's higher accuracy (0.565)
+comes entirely from predicting `showcase` every time. `showcase` is 13 of the
+23 test posts, so that's exactly the score of always guessing the biggest
+label. It never predicts `question` or `rate_request`, which is why its macro
+F1 is lower than the baseline's.
 
+The baseline actually separates my labels. It catches `question` posts well
+(F1 0.833), because they are phrased as questions. Its weakness is
+`showcase`: with my definitions it gets none right.
+
+The bare-names run suggests why: without definitions, `showcase` F1 rises to
+0.889 and accuracy to 0.783. My `showcase` definition is mostly about what the
+post *doesn't* do, and a zero-shot entailment model seems to handle that phrasing poorly. The strongest baseline, bare label names at 0.783, beats my
+trained model outright.
 
 
 ---
@@ -255,30 +289,58 @@ corrected the labels I disagreed with, starting with the flagged ones. The 20 `c
 <!-- Five criteria across three seeds. The notebook's section 6 prints the
      spread table; the Target and Verdict columns are yours. -->
 
+| Measure | Seed 42 | Seed 7 | Seed 2024 | Spread |
+|---|---|---|---|---|
+| Overall accuracy | 0.565 | 0.565 | 0.565 | 0.000 |
+| Macro F1 | 0.241 | 0.241 | 0.241 | 0.000 |
+| `showcase` precision / recall / F1 | 0.565 / 1.000 / 0.722 | 0.565 / 1.000 / 0.722 | 0.565 / 1.000 / 0.722 | 0.000 |
+| `question` precision / recall / F1 | 0.000 / 0.000 / 0.000 | 0.000 / 0.000 / 0.000 | 0.000 / 0.000 / 0.000 | 0.000 |
+| `rate_request` precision / recall / F1 | 0.000 / 0.000 / 0.000 | 0.000 / 0.000 / 0.000 | 0.000 / 0.000 / 0.000 | 0.000 |
+| Accuracy, most-confident third | 1.000 | 1.000 | 1.000 | 0.000 |
+| Accuracy, least-confident third | 0.286 | 0.286 | 0.143 | 0.143 |
+
+The notebook calls a 0.000 accuracy spread "stable enough to trust". Here it
+isn't a sign of a reliable measure. All three seeds predicted `showcase` for
+every post, and the stratified split gives every seed the same label counts in
+test (13 / 7 / 3), so each one scores exactly 13/23. The numbers can't vary
+because the model isn't using the text.
+
+**The five criteria across three seeds:**
+
 | Criterion | Target | Seed 42 | Seed 7 | Seed 2024 | Verdict |
 |---|---|---|---|---|---|
-| 1.  |  |  |  |  |  |
-| 2.  |  |  |  |  |  |
-| 3.  |  |  |  |  |  |
-| 4.  |  |  |  |  |  |
-| 5.  |  |  |  |  |  |
+| 1. Overall accuracy | ≥ 0.75 | 0.565 | 0.565 | 0.565 | MISSED |
+| 2. `showcase` F1 and `question` F1 | each ≥ 0.75 | 0.722 / 0.000 | 0.722 / 0.000 | 0.722 / 0.000 | MISSED |
+| 3. `rate_request` F1 | ≥ 0.40 | 0.000 | 0.000 | 0.000 | MISSED |
+| 4. Every label's share of `labels.csv` | 20%–60% | `rate_request` 12% | `rate_request` 12% | `rate_request` 12% | MISSED |
+| 5. Most-confident third minus least-confident third, accuracy | ≥ 0.20 | 0.714 | 0.714 | 0.857 | MET (see note) |
+
+Criterion 4 is about the dataset, not the model, so it has the same value for
+every seed: `labels.csv` is 57% `showcase`, 31% `question` and 12%
+`rate_request`.
 
 ### Confusion matrix
 
 <!-- ⚠️ TYPED AS A MARKDOWN TABLE. The notebook prints one ready to paste.
      An image of a matrix earns nothing. -->
 
-| true \ predicted |  |  |  |
+Seed 42 (notebook section 7). Seeds 7 and 2024 produced the same matrix.
+
+| true \ predicted | showcase | question | rate_request |
 |---|---|---|---|
-| **** |  |  |  |
-| **** |  |  |  |
-| **** |  |  |  |
+| **showcase** | 13 | 0 | 0 |
+| **question** | 7 | 0 | 0 |
+| **rate_request** | 3 | 0 | 0 |
 
 **My biggest off-diagonal number, and what it means:**
 <!-- Not "the model made mistakes" — WHICH boundary it didn't learn, and which
      direction. "7 real analysis posts were called hot_take and only 3 went the
      other way" is a direction, not just an error rate. -->
-
+All 7 real `question` posts were predicted `showcase`, and 0 went the other
+way. The same is true of all 3 `rate_request` posts. The model hasn't learned
+either boundary; it has collapsed everything into my majority label. This
+isn't a confusion between two specific labels. Every error points in the same
+direction, toward `showcase`.
 
 
 ---
@@ -290,11 +352,11 @@ corrected the labels I disagreed with, starting with the flagged ones. The 20 `c
 
 | # | Criterion | Target | Verdict | How I decided |
 |---|---|---|---|---|
-| 1 |  |  |  |  |
-| 2 |  |  |  |  |
-| 3 |  |  |  |  |
-| 4 |  |  |  |  |
-| 5 |  |  |  |  |
+| 1 | Overall accuracy | ≥ 0.75 | MISSED | 0.565 on all three seeds. It never reaches the target, and it is exactly the always-`showcase` score (13/23). |
+| 2 | `showcase` and `question` F1 | each ≥ 0.75 | MISSED | Both have to clear 0.75 on every seed. `showcase` reaches 0.722 and `question` 0.000 on all three, so neither does. |
+| 3 | `rate_request` F1 | ≥ 0.40 | MISSED | 0.000 on all three seeds. The model never predicts `rate_request`. |
+| 4 | Label balance in `labels.csv` | every label 20%–60% | MISSED | Measured on the file, not the model. `rate_request` is 18 of 150 rows (12%), under the 20% floor. `showcase` (57%) and `question` (31%) are within range. |
+| 5 | Confidence gap | ≥ 0.20 | MET, but not meaningful | The gap is 0.714, 0.714 and 0.857, so it clears 0.20 on every seed. But the model predicts `showcase` for everything, so "right" just means "the post really was `showcase`". It's more confident on `showcase`-looking posts, which makes the gap real arithmetic but not evidence that its confidence tracks correctness across my labels. |
 
 **Diagnoses**
 
@@ -319,7 +381,7 @@ corrected the labels I disagreed with, starting with the flagged ones. The 20 `c
      data/staff_taxonomy.md, not your own — so every argument below is made
      from those definitions and those decision rules. -->
 
-**Agreement rate:** ___ / 30 = ___%
+**Agreement rate:** 23 / 30 = 77%
 
 <!-- Nobody grades this number. A 60% who argues every disagreement from the
      stated rules beats a 95% who wrote "staff was right" nine times. Several
@@ -341,27 +403,84 @@ corrected the labels I disagreed with, starting with the flagged ones. The 20 `c
      written rule two different ways on 30 posts, that is direct evidence about
      what you did across your own 200. -->
 
-**1.**
-> *The post:*
->
-> *Staff said / I said:*
->
-> *My call, and why:*
->
-> *Which pile:*
+All seven run the same way: staff said `analysis`, and I said something else.
 
-**2.**
-> *The post:*
+**1. (sp_001)**
+> *The post:* "Pulled the splits from the last five editions. The winning time has moved by 40 seconds total in ten years, but the 100th-place time is four minutes faster. The depth changed, the front didn't."
 >
-> *Staff said / I said:*
+> *Staff said / I said:* `analysis` / `reaction`
 >
-> *My call, and why:*
+> *My call, and why:* Staff is right. Nothing here just happened to the writer, and there's no feeling. It's two checkable numbers, and the contrast between them is the whole claim. That matches the `analysis` definition, and `reaction` ("feeling rather than argument") doesn't fit at all.
 >
-> *Which pile:*
+> *Which pile:* (a)
+
+**2. (sp_002)**
+> *The post:* "I tracked sleep against session quality for eleven weeks. Under seven hours the next day's intervals were 6-8 seconds per mile slower, every time bar one. Small sample, one runner, but it's consistent enough that I've stopped scheduling hard days after late shifts."
+>
+> *Staff said / I said:* `analysis` / `reaction`
+>
+> *My call, and why:* Staff is right. It's about the writer's own running, which pulled me toward `reaction`. But it covers eleven weeks, not the last few hours, and the conclusion rests on the measured 6–8 seconds. Rule 3 covers this: personal and recent doesn't outrank a load-bearing fact.
+>
+> *Which pile:* (a)
+
+**3. (sp_003)**
+> *The post:* "The club championship scoring changed in 2019 from top-6 to top-10. Since then our B team has finished above the A team twice. That's not depth improving, it's the scoring rewarding turnout."
+>
+> *Staff said / I said:* `analysis` / `reaction`
+>
+> *My call, and why:* Staff is right. A named date, a named rule change, and a counted result are used to reject a rival explanation. That's an argument from checkable facts. "Our B team" is the only personal element, and it isn't a feeling about something that just happened.
+>
+> *Which pile:* (a)
+
+**4. (sp_004)**
+> *The post:* "Everyone blames the hill at 18 miles. I split the field into people who ran the first half under 1:45 and over, and the slowdown after 18 was almost identical for both groups. If the hill were the problem the fast starters would fall apart harder."
+>
+> *Staff said / I said:* `analysis` / `reaction`
+>
+> *My call, and why:* Staff is right. The post sets up a test, reports what it showed, and draws an inference. It reads as a response to a race, but rule 3 says immediacy isn't the deciding feature when a fact carries the argument, and here it does.
+>
+> *Which pile:* (a)
+
+**5. (sp_007)**
+> *The post:* "Ran the same loop in 4C and in 24C within a fortnight, same effort by heart rate. 90 seconds slower in the heat over six miles. People keep saying heat costs you 'a bit' and it's more than that."
+>
+> *Staff said / I said:* `analysis` / `reaction`
+>
+> *My call, and why:* Staff is right. It's the writer's own runs, but the last sentence is a general claim ("heat costs more than people say"), and the 90 seconds is the reason for it. By rule 3, the load-bearing fact makes it `analysis` even though it's personal.
+>
+> *Which pile:* (a)
+
+**6. (sp_008)**
+> *The post:* "Went back through the club results going back to 2012. Every single year the number of people who enter the spring marathon and don't start it sits between 18 and 23 percent. It's not a bad-luck year, it's the base rate."
+>
+> *Staff said / I said:* `analysis` / `hot_take`
+>
+> *My call, and why:* Staff is right. The ending sounds like a confident claim, which is why I said `hot_take`. But rule 1 asks whether the fact carries the argument. The conclusion ("it's the base rate") only holds because of the 18–23% range across every year since 2012. That range is the argument, not decoration.
+>
+> *Which pile:* (a)
+
+**7. (sp_010)**
+> *The post:* "Three of us ran the same session on the same day, different shoes, within 10 seconds of each other over 5 miles. I'm not saying shoes do nothing, but whatever they do was smaller than the noise between three people."
+>
+> *Staff said / I said:* `analysis` / `reaction`
+>
+> *My call, and why:* Staff is right, though this is the closest one. It's a same-day personal session with a hedge ("I'm not saying shoes do nothing"), which is why it read as `reaction` to me. But there's no feeling in it, and the conclusion rests on a checkable comparison (within 10 seconds over 5 miles). The sample is tiny, but the definition asks for a checkable fact that does work, not a strong one. Rule 3 still applies.
+>
+> *Which pile:* (a)
+
+**Pile counts:** (a) 7 · (b) 0 · (c) 0
 
 **What the pattern in my disagreements tells me:**
-
-
+Every miss is the same mistake. When a post was about the writer's own running
+or their own club, I treated it as `reaction`, even when it was built on a
+checkable fact. I put only 3 of 30 posts in `analysis` against staff's 10.
+Rule 3 already covers this ("recency does not outrank evidence"), so this
+isn't a gap in the definitions. I applied a written rule loosely, and in a
+consistent direction: I let surface cues (first person, "our", "I ran")
+decide the label instead of what the post is doing. That matters for my own
+dataset. It's the same kind of slip that my `question` / `rate_request`
+boundary invites, where phrasing ("how does this look?") can pull a post away
+from what it's actually asking for.
 
 ---
 
