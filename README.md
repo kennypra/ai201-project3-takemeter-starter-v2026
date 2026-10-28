@@ -536,26 +536,78 @@ from what it's actually asking for.
 
 ## The Improvement
 
-**What I changed:**
+**What I changed:** One training setting: `EPOCHS` went from 3 to 10 (notebook
+section 2). Everything else stayed the same: `labels.csv` (no rows changed or
+added), `distilbert-base-uncased`, lr 2e-5, batch 16, max length 128, and the
+same seeds 42, 7 and 2024. I ran section 6 with `RUN_LABEL = "after"` on
+`mps`. Results are in `results_three_seeds_after.json`.
 
-**Which diagnosis pointed at it:**
+**Which diagnosis pointed at it:** My M4 diagnosis for criteria 1–3. Three
+epochs over 104 posts is only about 21 training steps, and validation accuracy
+stayed flat at the majority-guess score (0.565) every epoch. The baseline
+showed the signal was in the text. The agreement report showed my labelling
+slips couldn't explain a total collapse. So the model hadn't trained long
+enough. Adding `rate_request` posts would also fit the diagnosis, but I didn't
+have time to collect them. Ten epochs is about 70 steps.
 
 ### Run Log — After
 
 | Criterion | Target | Seed 42 | Seed 7 | Seed 2024 | Verdict |
 |---|---|---|---|---|---|
-| 1.  |  |  |  |  |  |
-| 2.  |  |  |  |  |  |
-| 3.  |  |  |  |  |  |
-| 4.  |  |  |  |  |  |
-| 5.  |  |  |  |  |  |
+| 1. Overall accuracy | ≥ 0.75 | 0.870 | 0.739 | 0.870 | MISSED |
+| 2. `showcase` F1 and `question` F1 | each ≥ 0.75 | 0.929 / 0.933 | 0.889 / 0.625 | 0.929 / 0.933 | MISSED |
+| 3. `rate_request` F1 | ≥ 0.40 | 0.000 | 0.000 | 0.000 | MISSED |
+| 4. Every label's share of `labels.csv` | 20%–60% | `rate_request` 12% | `rate_request` 12% | `rate_request` 12% | MISSED |
+| 5. Most-confident third minus least-confident third, accuracy | ≥ 0.20 | 0.143 | 0.857 | 0.286 | MISSED |
 
-**Did it help, and how do I know:**
+**Before and after, side by side:**
 
-<!-- If it didn't, say so. Relabelling that didn't help is a genuinely
-     interesting result and earns full credit. -->
+| Criterion | Target | Before (42 / 7 / 2024) | After (42 / 7 / 2024) | Verdict before → after |
+|---|---|---|---|---|
+| 1. Accuracy | ≥ 0.75 | 0.565 / 0.565 / 0.565 | 0.870 / 0.739 / 0.870 | MISSED → MISSED |
+| 2. `showcase` F1 | ≥ 0.75 | 0.722 / 0.722 / 0.722 | 0.929 / 0.889 / 0.929 | part of 2 |
+| 2. `question` F1 | ≥ 0.75 | 0.000 / 0.000 / 0.000 | 0.933 / 0.625 / 0.933 | MISSED → MISSED |
+| 3. `rate_request` F1 | ≥ 0.40 | 0.000 / 0.000 / 0.000 | 0.000 / 0.000 / 0.000 | MISSED → MISSED |
+| 4. Balance | 20%–60% | 12% | 12% | MISSED → MISSED |
+| 5. Confidence gap | ≥ 0.20 | 0.714 / 0.714 / 0.857 | 0.143 / 0.857 / 0.286 | MET → MISSED |
+| Macro F1 (not a criterion) | — | 0.241 / 0.241 / 0.241 | 0.621 / 0.505 / 0.621 | — |
 
+Confusion matrix after, seed 42 (seed 2024 was the same):
 
+| true \ predicted | showcase | question | rate_request |
+|---|---|---|---|
+| **showcase** | 13 | 0 | 0 |
+| **question** | 0 | 7 | 0 |
+| **rate_request** | 2 | 1 | 0 |
+
+Seed 7:
+
+| true \ predicted | showcase | question | rate_request |
+|---|---|---|---|
+| **showcase** | 12 | 1 | 0 |
+| **question** | 2 | 5 | 0 |
+| **rate_request** | 0 | 3 | 0 |
+
+**Did it help, and how do I know:** Yes, it fixed the collapse, but it didn't
+turn any criterion into a MET. The model now uses the text. Accuracy rose
+from 0.565 to 0.739–0.870, `question` F1 went from 0.000 to 0.625–0.933, and
+macro F1 more than doubled. On two seeds it beats both baselines, including
+the bare-names zero-shot run (0.783). But criteria 1 and 2 still miss because
+of a single seed: seed 7 (accuracy 0.739, `question` F1 0.625) falls below
+both targets, while seeds 42 and 2024 clear them easily.
+
+`rate_request` is still never predicted on any seed. Its 3 test posts go to
+`showcase` or `question`. That points back to the other half of my diagnosis,
+too few examples, which more epochs can't fix.
+
+Criterion 5 went from MET to MISSED. Now that the model predicts more than one
+label, the confidence gap is a real test: on seed 42 the least-confident third
+was still 86% accurate, so the gap was only 0.143. That makes the old MET
+look like the artifact I suspected.
+
+Accuracy now moves 0.13 across seeds, more than 10 points. With only 23 test
+posts, one or two posts change the verdict, so the dataset is too small for a
+stable measure.
 
 ---
 
