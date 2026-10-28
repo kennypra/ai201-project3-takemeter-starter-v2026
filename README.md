@@ -218,6 +218,15 @@ Two labels have fewer than 8 posts in the test split: `question` (7) and `rate_r
 **Pre-labelling disclosure:** Claude pre-labelled 109 of my 150 posts from my written definitions. Each of those rows has `pre-labeled` in the `note` column. Claude flagged 16 of them as unsure. I read every pre-labelled row and
 corrected the labels I disagreed with, starting with the flagged ones. The 20 `cold` rows and 21 other rows (blank note) I labelled myself without AI.
 
+**Unit 6 moment: spotting the error patterns**
+
+- *What I asked for:* I asked Claude to run the baseline and the three-seed before and after runs, and to help diagnose the misses.
+- *What came back:* Claude ran the notebook's training and evaluation cells from a separate script, so the Unit 5 `results.json` and `test_split.csv` weren't overwritten, and it checked those files were unchanged afterwards. It pointed out three patterns I hadn't noticed:
+  - The before model gave the exact same scores on all three seeds because it predicted `showcase` for every post, after only about 21 training steps.
+  - The bare-names baseline (0.783) beat the baseline that used my definitions (0.348). That's probably because my `showcase` definition is written as a "does not ask" rule.
+  - All 7 of my disagreements with the staff set were posts staff called `analysis`.
+- *What I changed:* I chose the improvement (more epochs) from the collapse diagnosis, and I used the agreement pattern as evidence that the collapse was a model problem, not a labelling one. I labelled `my_staff_labels.csv` myself, without AI. I didn't make a prediction before the baseline ran. When I asked Claude to write one for me afterwards, it refused because that would be made up, so the Baseline section says no prediction was made.
+
 
 <!-- ═══════════════════════ UNIT 6 — THE TEST ═══════════════════════
 
@@ -615,11 +624,27 @@ stable measure.
 
 <!-- For each criterion still missed: what you'd do, and why you stopped. -->
 
+All five criteria are still MISSED after the improvement.
 
+| Criterion | What I'd do next | Why I stopped |
+|---|---|---|
+| 1. Accuracy ≥ 0.75 | Two seeds already pass (0.870), and only seed 7 misses (0.739, 6 of 23 wrong). I'd grow `labels.csv` to 200+ rows so the test split is about 30 posts, then check whether seed 7 is a weak model or just a hard split. Right now one post moves accuracy by 0.04. | I ran out of time to collect more posts, and the unit allows only one change. |
+| 2. `showcase` and `question` F1 ≥ 0.75 | `showcase` passes on every seed. `question` misses only on seed 7 (0.625), where 2 `question` posts went to `showcase` and all 3 `rate_request` posts were pulled into `question`. The fix is the same as for criterion 1, plus fixing `rate_request` (criterion 3), since its posts are what crowd the `question` column. | Same as criterion 1. |
+| 3. `rate_request` F1 ≥ 0.40 | This is the real failure: zero `rate_request` predictions on any seed, before or after. I'd collect about 25 more `rate_request` posts ("rate my plate", "how does this look?") to roughly double the label. If that wasn't enough, I'd add class weights to the loss so a miss on the small label costs more. I'd also fix row 52 (Lamb Marinade), which is `rate_request` under my old rule but `question` under the refined one. | I couldn't collect more posts in time. Class weights would have been a second change, and the unit allows one. I left row 52 alone for the same reason. |
+| 4. Every label 20–60% | This is purely collection: `rate_request` is 18 of 150 (12%). Reaching 20% at 200 rows means 40 `rate_request` posts, so 22 more. | I ran out of time to collect. No training change can fix this one. |
+| 5. Confidence gap ≥ 0.20 | Seeds 42 and 2024 miss because the model is now right almost everywhere: the least-confident third was 86% and 71% accurate, and the most-confident third can't go above 1.0. With about 8 posts per third, a gap of 0.20 is 2 posts. I'd measure it again on a larger test split before deciding the model's confidence is uninformative. I wouldn't revise the criterion, because it was measurable and I simply missed it. | Fixing this needs more data, the same blocker as criteria 1–4. |
 
 **The gap between what I meant my labels to capture and what the model
 learned:**
 <!-- Two sentences. Your confusion matrix is the evidence. -->
+
+I meant `rate_request` to capture *what the poster wants*: a judgment on a
+finished dish, whether it's phrased as "rate my plate" or as "how does this
+look?". The model instead learned only the surface split between "asks
+something" and "doesn't ask", so in the after matrices every `rate_request`
+post went to `question` (seed 7: 3 of 3) or to `showcase` (seeds 42 and 2024:
+2 to `showcase`, 1 to `question`), and the `rate_request` column is empty on
+every seed.
 
 
 
